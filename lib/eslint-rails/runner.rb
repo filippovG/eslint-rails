@@ -10,6 +10,7 @@ module ESLintRails
 
     def run
       warnings = assets.map do |asset|
+        asset = File.new(asset, 'r')
         generate_warnings(asset).tap { |warnings| output_progress(warnings) }
       end
       
@@ -28,7 +29,7 @@ module ESLintRails
     end
     
     def assets
-      all_js_assets = Rails.application.assets.each_file.to_a.select { |pn| pn.extname == '.js' }
+      all_js_assets = Rails.application.assets.each_file.to_a.select { |pn| pn if pn.include?('.js') }
       
       assets = all_js_assets.select{|a| is_descendant?(@file, a)}
 
@@ -50,7 +51,7 @@ module ESLintRails
     end
     
     def generate_warnings(asset)
-      relative_path = asset.relative_path_from(Pathname.new(Dir.pwd))
+      relative_path = Pathname.new(asset).relative_path_from(Pathname.new(Dir.pwd))
       file_content = asset.read
       
       warning_hashes(file_content).map do |hash|
